@@ -42,6 +42,19 @@ class AuthService
         // TODO: implement this for authenticating the user
         // TODO: make sure the user exists and the password matches
         // TODO: don't forget to store in session user data needed afterwards
+        $dbUser = $this->users->findByUsername($username);
+        
+        if (!isset($dbUser->username)) {
+            throw new \RuntimeException("This account don't exist");
+        }
+
+        if (!password_verify($password, $dbUser->passwordHash)) {
+            throw new \RuntimeException("Username or password don't match");
+        }
+
+
+        $_SESSION['id'] = $dbUser->id;
+        $_SESSION['username'] = $dbUser->username;
 
         return true;
     }

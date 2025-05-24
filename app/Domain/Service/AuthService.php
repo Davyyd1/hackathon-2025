@@ -17,7 +17,7 @@ class AuthService
     {
         // TODO: check that a user with same username does not exist, create new user and persist
         $dbUser = $this->users->findByUsername($username);
-        if($username === isset($dbUser->username)){
+        if($dbUser !== null){
             throw new \RuntimeException('Username already taken');
         };
         if(strlen($username) < 4) {

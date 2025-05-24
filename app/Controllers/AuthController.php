@@ -31,8 +31,26 @@ class AuthController extends BaseController
     public function register(Request $request, Response $response): Response
     {
         // TODO: call corresponding service to perform user registration
+        $data = $request->getParsedBody();
+        $username = $data['username'];
+        $password = $data['password'];
 
-        return $response->withHeader('Location', '/login')->withStatus(302);
+        try {
+            $this->authService->register($username,$password);
+            return $response->withHeader('Location', '/login')->withStatus(302);
+        } catch(\RuntimeException $e) {
+            $message = $e->getMessage();
+            if(str_contains($message, 'Username')){
+                $errors['username'] = $message;
+            }
+            if(str_contains($message, 'Password')){
+                $errors['password'] = $message;
+            }
+            return $this->view->render($response, '/auth/register.twig', [
+            'errors' => $errors
+        ]);
+        } 
+
     }
 
     public function showLogin(Request $request, Response $response): Response

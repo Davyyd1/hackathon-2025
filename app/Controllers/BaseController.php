@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Domain\Repository\ExpenseRepositoryInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Slim\Views\Twig;
 
 abstract class BaseController
 {
     public function __construct(
-        protected Twig $view,
+        protected Twig $view
     ) {}
 
     protected function render(Response $response, string $template, array $data = []): Response

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Infrastructure\Persistence\PdoUserRepository;
+use App\Domain\Repository\ExpenseRepositoryInterface;
+use App\Domain\Repository\UserRepositoryInterface;
 use App\Domain\Service\ExpenseService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -11,11 +14,13 @@ use Slim\Views\Twig;
 
 class ExpenseController extends BaseController
 {
-    private const PAGE_SIZE = 20;
+    private const PAGE_SIZE = 10;
 
     public function __construct(
         Twig $view,
         private readonly ExpenseService $expenseService,
+        private readonly UserRepositoryInterface $userRepository,
+        private readonly ExpenseRepositoryInterface $expenseRepository
     ) {
         parent::__construct($view);
     }
@@ -23,23 +28,51 @@ class ExpenseController extends BaseController
     public function index(Request $request, Response $response): Response
     {
         // TODO: implement this action method to display the expenses page
-
+    
         // Hints:
         // - use the session to get the current user ID
         // - use the request query parameters to determine the page number and page size
         // - use the expense service to fetch expenses for the current user
+        $months = [
+            1 => 'Ianuarie',
+            2 => 'Februarie',
+            3 => 'Martie',
+            4 => 'Aprilie',
+            5 => 'Mai',
+            6 => 'Iunie',
+            7 => 'Iulie',
+            8 => 'August',
+            9 => 'Septembrie',
+            10 => 'Octombrie',
+            11 => 'Noiembrie',
+            12 => 'Decembrie',
+        ];
 
         // parse request parameters
-        $userId = 1; // TODO: obtain logged-in user ID from session
+        $userId = (int) $_SESSION['id']; // TODO: obtain logged-in user ID from session
+        $user = $this->userRepository->find($userId);
+        $year = isset($_GET['year']) ? (int) $_GET['year'] : (int)date('Y');
+        $month = isset($_GET['month']) ? (int) $_GET['month'] : (int)date('m');
+
+        $years = $this->expenseRepository->listExpenditureYears($user);
+        rsort($years); 
+        
         $page = (int)($request->getQueryParams()['page'] ?? 1);
         $pageSize = (int)($request->getQueryParams()['pageSize'] ?? self::PAGE_SIZE);
 
-        $expenses = $this->expenseService->list($userId, $page, $pageSize);
+        $expenses = $this->expenseService->list($user, $year, $month, $page, $pageSize);
 
         return $this->render($response, 'expenses/index.twig', [
-            'expenses' => $expenses,
-            'page'     => $page,
-            'pageSize' => $pageSize,
+            'expenses' => $expenses['items'],
+            'page'     => $expenses['page'],
+            'totalPages' => $expenses['totalPages'],
+            'total' => $expenses['total'],
+            'pageSize' => $expenses['pageSize'],
+            'years' => $years,
+            'months' => $months,
+            'year' => $year,
+            'month' => $month
+
         ]);
     }
 

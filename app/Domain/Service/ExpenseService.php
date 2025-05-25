@@ -19,7 +19,26 @@ class ExpenseService
     public function list(User $user, int $year, int $month, int $pageNumber, int $pageSize): array
     {
         // TODO: implement this and call from controller to obtain paginated list of expenses
-        return [];
+        $from = ($pageNumber - 1) * $pageSize;
+
+        $criteria = [
+            'user_id' => $user->id,
+            'year' => $year,
+            'month' => $month,
+        ];
+// return $this->expenses->findBy($criteria, $from, $pageSize);
+        
+        $items = $this->expenses->findBy($criteria, $from, $pageSize);
+        $total = $this->expenses->countBy($criteria);
+
+        return [
+        'items' => $items,
+        'total' => $total,
+        'page' => $pageNumber,
+        'pageSize' => $pageSize,
+        'totalPages' => (int)ceil($total / $pageSize),
+        ];
+        // return [];
     }
 
     public function create(

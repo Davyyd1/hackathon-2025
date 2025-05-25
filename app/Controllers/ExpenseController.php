@@ -8,6 +8,7 @@ use App\Infrastructure\Persistence\PdoUserRepository;
 use App\Domain\Repository\ExpenseRepositoryInterface;
 use App\Domain\Repository\UserRepositoryInterface;
 use App\Domain\Service\ExpenseService;
+use DateTimeImmutable;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Views\Twig;
@@ -79,16 +80,47 @@ class ExpenseController extends BaseController
     public function create(Request $request, Response $response): Response
     {
         // TODO: implement this action method to display the create expense page
+        $oldInput = $_SESSION['old_input'] ?? [];
+        $error = $_SESSION['error'] ?? null;
+
+        unset($_SESSION['old_input'], $_SESSION['error']);
+
 
         // Hints:
         // - obtain the list of available categories from configuration and pass to the view
-
-        return $this->render($response, 'expenses/create.twig', ['categories' => []]);
+        $categoriesJson = $_ENV['EXPENSE_CATEGORIES_JSON'];
+        $categories = json_decode($categoriesJson, true);
+        return $this->render($response, 'expenses/create.twig', [
+            'categories' => $categories,
+            'oldInput' => $oldInput,
+            'error' => $error
+        ]);
     }
 
     public function store(Request $request, Response $response): Response
     {
         // TODO: implement this action method to create a new expense
+        $userId = (int)$_SESSION['id'];
+        $data = $request->getParsedBody();
+        // var_dump($data);
+        $date = new DateTimeImmutable($data['date']);
+        // $date->format('Y-m-d');
+        $category = $data['category'];
+        $amount = $data['amount'];
+        $description = $data['description'];
+        $user = $this->userRepository->find($userId);
+
+        try{
+            $this->expenseService->create($user, (int)$amount, $description, $date, $category);
+            return $response->withHeader('Location', '/expenses')->withStatus(302);
+        } catch (\RuntimeException $e) {
+            $message = $e->getMessage();
+            echo $message;
+            $_SESSION['old_input'] = $data;
+            $_SESSION['error'] = $message;
+
+            return $response->withHeader('Location', '/expenses/create')->withStatus(302);
+        }
 
         // Hints:
         // - use the session to get the current user ID
@@ -96,7 +128,7 @@ class ExpenseController extends BaseController
         // - rerender the "expenses.create" page with included errors in case of failure
         // - redirect to the "expenses.index" page in case of success
 
-        return $response;
+        // return $response;
     }
 
     public function edit(Request $request, Response $response, array $routeParams): Response

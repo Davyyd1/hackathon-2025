@@ -50,7 +50,6 @@ class AuthController extends BaseController
             'errors' => $errors
         ]);
         } 
-
     }
 
     public function showLogin(Request $request, Response $response): Response

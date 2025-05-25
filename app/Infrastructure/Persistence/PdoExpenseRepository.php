@@ -50,6 +50,23 @@ class PdoExpenseRepository implements ExpenseRepositoryInterface
 
     }
 
+    public function update(Expense $expense): void {
+        $query = 'UPDATE expenses SET
+            date = :date,
+            category = :category,
+            amount_cents = :amount_cents,
+            description = :description
+            WHERE id = :id';
+
+        $statement = $this->pdo->prepare($query);
+        $statement->bindValue(':date', $expense->date->format('Y-m-d'));
+        $statement->bindValue(':category', $expense->category, PDO::PARAM_STR);
+        $statement->bindValue(':amount_cents', $expense->amountCents, PDO::PARAM_INT);
+        $statement->bindValue(':description', $expense->description, PDO::PARAM_STR);
+        $statement->bindValue(':id', $expense->id, PDO::PARAM_INT);
+        $statement->execute();
+    }
+
     public function delete(int $id): void
     {
         $statement = $this->pdo->prepare('DELETE FROM expenses WHERE id=?');

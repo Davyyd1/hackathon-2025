@@ -20,8 +20,11 @@ class ExpenseController extends BaseController
     public function __construct(
         Twig $view,
         private readonly ExpenseService $expenseService,
+
+        // ???????????????????
         private readonly UserRepositoryInterface $userRepository,
         private readonly ExpenseRepositoryInterface $expenseRepository
+        // ???????????????????
     ) {
         parent::__construct($view);
     }
@@ -115,7 +118,6 @@ class ExpenseController extends BaseController
             return $response->withHeader('Location', '/expenses')->withStatus(302);
         } catch (\RuntimeException $e) {
             $message = $e->getMessage();
-            echo $message;
             $_SESSION['old_input'] = $data;
             $_SESSION['error'] = $message;
 
@@ -134,20 +136,65 @@ class ExpenseController extends BaseController
     public function edit(Request $request, Response $response, array $routeParams): Response
     {
         // TODO: implement this action method to display the edit expense page
+        // metoda find
+        $paramsId = (int)$routeParams['id'];
+        $expense = $this->expenseRepository->find($paramsId);
+        
+        // var_dump($expense1);
+        $categoriesJson = $_ENV['EXPENSE_CATEGORIES_JSON'];
+        $categories = json_decode($categoriesJson, true);
 
+        if(!isset($expense->userId)){
+            return $response->withHeader('Location', '/expenses')->withStatus(302);
+        }
+        if(!($_SESSION['id'] === $expense->userId)){
+            return $response->withHeader('Location', '/expenses')->withStatus(403);
+        }
         // Hints:
         // - obtain the list of available categories from configuration and pass to the view
         // - load the expense to be edited by its ID (use route params to get it)
         // - check that the logged-in user is the owner of the edited expense, and fail with 403 if not
 
-        $expense = ['id' => 1];
-
-        return $this->render($response, 'expenses/edit.twig', ['expense' => $expense, 'categories' => []]);
+        return $this->render($response, 'expenses/edit.twig', [
+            'expense' => $expense,
+            'categories' => $categories
+        ]);
+       
     }
 
     public function update(Request $request, Response $response, array $routeParams): Response
     {
         // TODO: implement this action method to update an existing expense
+        $paramsId = (int)$routeParams['id'];
+
+        $expense = $this->expenseRepository->find($paramsId);
+        $categoriesJson = $_ENV['EXPENSE_CATEGORIES_JSON'];
+        $categories = json_decode($categoriesJson, true);
+
+        $data = $request->getParsedBody();
+        $date = new DateTimeImmutable($data['date']);
+        $category = $data['category'];
+        $amount = $data['amount'];
+        $description = $data['description'];
+
+        if(!isset($expense->userId)){
+            return $response->withHeader('Location', '/expenses')->withStatus(302);
+        }
+        if(!($_SESSION['id'] === $expense->userId)){
+            return $response->withHeader('Location', '/expenses')->withStatus(403);
+        }
+        
+        try {
+            $this->expenseService->update($expense, (int)$amount, $description, $date, $category);
+            return $response->withHeader('Location', '/expenses')->withStatus(302);
+        } catch (\RuntimeException $e) {
+            $error = $e->getMessage();
+            return $this->render($response, "expenses/edit.twig", [
+            'error' => $error,
+            'expense' => $expense,
+            'categories' => $categories
+            ]);
+        }
 
         // Hints:
         // - load the expense to be edited by its ID (use route params to get it)
@@ -157,12 +204,13 @@ class ExpenseController extends BaseController
         // - rerender the "expenses.edit" page with included errors in case of failure
         // - redirect to the "expenses.index" page in case of success
 
-        return $response;
+        // return $response;
     }
 
     public function destroy(Request $request, Response $response, array $routeParams): Response
     {
         // TODO: implement this action method to delete an existing expense
+        $paramsId = (int)$routeParams['id'];
 
         // - load the expense to be edited by its ID (use route params to get it)
         // - check that the logged-in user is the owner of the edited expense, and fail with 403 if not

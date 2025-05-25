@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Domain\Repository\ExpenseRepositoryInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Slim\Views\Twig;
 

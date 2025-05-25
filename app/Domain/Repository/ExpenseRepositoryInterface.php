@@ -16,6 +16,8 @@ interface ExpenseRepositoryInterface
 
     public function delete(int $id): void;
 
+    public function update(Expense $expense): void;
+
     public function find(int $id): ?Expense;
 
     public function findBy(array $criteria, int $from, int $limit): array;

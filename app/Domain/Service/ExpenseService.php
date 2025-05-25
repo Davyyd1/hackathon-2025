@@ -69,12 +69,32 @@ class ExpenseService
 
     public function update(
         Expense $expense,
-        float $amount,
+        int $amount,
         string $description,
         DateTimeImmutable $date,
         string $category,
     ): void {
         // TODO: implement this to update expense entity, perform validation, and persist
+        $today = (new \DateTimeImmutable())->format('Y-m-d');
+        $dateFormatted = $date->format('Y-m-d');
+        if($dateFormatted > $today ) {
+            throw new \RuntimeException("Data can't be greater than today.");
+        }
+        if(!$category) {
+            throw new \RuntimeException("Category must be set.");
+        }
+        if($amount <= 0) {
+            throw new \RuntimeException("Amount must be set.");
+        }
+        if(!$description) {
+            throw new \RuntimeException("Description must be set.");
+        }
+
+        $expense->amountCents = $amount;
+        $expense->description = $description;
+        $expense->date = $date;
+        $expense->category= $category;
+        $this->expenses->update($expense);
     }
 
     public function importFromCsv(User $user, UploadedFileInterface $csvFile): int

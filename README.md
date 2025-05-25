@@ -104,10 +104,31 @@ A solution with passing analysis and unit tests will receive extra points.
 ## Delivery details
 
 Participant:
-- Full name: ...
-- Email address: ...
+
+- Full name: Dumitrescu David-Mihail
+- Email address: david.dumitrescu7@yahoo.com
 
 Features fully implemented:
-- ...
+
+Auth:
+-Register
+-Log-in
+-Showing current user
+-Log out
+
+/expenses:
+-Add Expense
+-Delete Expense
+-View expenses
+-Pagination(next/prev)
+-Total items
+-Filter by year month
+-Edit
+
+/dashboard:
+-Total expenditure(+ display month under sum )
+-Filter by year month
+-per-category totals
+-per-category averages
 
 Other instructions about setting up the application (if any): ...

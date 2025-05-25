@@ -13,6 +13,12 @@ class AuthService
         private readonly UserRepositoryInterface $users,
     ) {}
 
+    public function getUser(int $id):User {
+        $user = $this->users->find($id);
+
+        return $user;
+    }
+
     public function register(string $username, string $password): User
     {
         // TODO: check that a user with same username does not exist, create new user and persist
